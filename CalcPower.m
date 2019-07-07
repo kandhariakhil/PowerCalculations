@@ -3,27 +3,37 @@ close all
 clc
 
     R = 23/2; %Radius of segment
-    t = 0.3175;
+    t = 0.3175; %Thickness of segment
     L = 20; %Length of segment
-    nu = 1.3;
-    i = 0;
-    j = 0;
-    w = 1;
+    nu = 1.3; %Poisson ratio
+    %i = 0; 
+    j = 0; %Used for iterating through pairs of moving segments
+    w = 1; %Number of waves
     
-    max_segments = 150;
+    min_segments = 6;
+    max_segments = 150; %Maximum number of segments
     
-    for n = 6:max_segments
-        min_COT = inf;
-        for w = 1:floor(n/2)
-            for b = 0:floor(n/2)
+    %Iterating number of segments from min to max
+    for n = min_segments:max_segments
+        min_COT = inf; %Selecting a minimum COT for each iteration
+        for w = 1:floor(n/2) %Maximum number of waves possible is n/2 waves
+            for b = 0:floor(n/2) %Maximum number of bridged segments possible is half the number of segments
                 m = 1;
                 j = 1;
+                %While loop to iterate thorough all possible combinations in integers given
+                %constraints are met with, while loop includes the 2 possible constraints set up for
+                %this equation
+                
+                %fmincon was used at first but would not meet all constraints and would not give
+                %only integer values due to which this optimization was created
                 while ((n-w*(2*m+b)>0) && (4*m+2*b-(n))<=0)
+                    %Calculating COT based on Math_ver9.
                     COT = (1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
-                    %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b)));
-                    %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b)));
-                    %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+                    %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b))); ->Simply supported bending
+                    %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
+                    %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending
                     
+                    %If a minimum COT is measured note the w,m,b parameters for that segment number
                     if(COT<min_COT)
                         min_COT = COT;
                         wopt(n) = w;
@@ -37,25 +47,19 @@ clc
             end
         end
     end
-
+    
+    %Record all COT
     [w_max,m_max,b_max] = size(COT);
     
+    %If COT is measured as 0 convert it to NaN
     COT(COT == 0) = NaN;
     
-%     for i = 1:w_max
-%         for j = 1:m_max
-%             for k = 1:b_max
-%                 if (COT(i,j,k) == 0)
-%                     COT(i,j,k) = NaN;
-%                 end
-%             end
-%         end
-%     end
-    
+    %Calculate percentage of anchoring segments
     for i = 6:max_segments
         perc_anchoring(i) = ((i-wopt(i)*(2*mopt(i)+bopt(i)))/i)*100;
     end
     
+    %calculate bending and compression power factors
     for i = 6:max_segments
         bending_power_factor(i) = (i*(2*mopt(i)+bopt(i))^4*(L/R)^3)/(8*wopt(i)*mopt(i)*(mopt(i)+bopt(i)));
         compression_power_factor(i) = (pi^4*i^2*R^3)/(4*wopt(i)*mopt(i)*(mopt(i)+bopt(i))*(i-(wopt(i)*(2*mopt(i)+bopt(i))))*(L*t^2));
@@ -63,8 +67,7 @@ clc
     end
     
     %%
-    %Store all values for a particular segment
-    
+    %Store all w,m,b values for a particular number of segments
     segment_num = 50;
     for w = 1:floor(segment_num/2)
         for b = 0:floor(segment_num/2)
