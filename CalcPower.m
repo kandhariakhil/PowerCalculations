@@ -19,7 +19,6 @@ clc
         for w = 1:floor(n/2) %Maximum number of waves possible is n/2 waves
             for b = 0:floor(n/2) %Maximum number of bridged segments possible is half the number of segments
                 m = 1;
-                j = 1;
                 %While loop to iterate thorough all possible combinations in integers given
                 %constraints are met with, while loop includes the 2 possible constraints set up for
                 %this equation
@@ -42,7 +41,6 @@ clc
                         COTopt(n) = min_COT;
                     end
                     m=m+1;
-                    j=j+1;
                 end
             end
         end
@@ -67,27 +65,40 @@ clc
     end
     
     %%
-    %Store all w,m,b values for a particular number of segments
-    segment_num = 50;
+    %Store all w,m,b values for a particular number of segments for both compression and bending factor
+    segment_num = 100;
+    
     for w = 1:floor(segment_num/2)
         for b = 0:floor(segment_num/2)
             m = 1;
-            j = 1;
             while ((segment_num-w*(2*m+b)>0) && (4*m+2*b-(segment_num))<=0)
-                COT_segment(j,b+1,w) = (1/nu)*(((segment_num*pi^4*R^3)/((segment_num-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(segment_num/(w*m*(m+b)));
+                COT_segment(m,b+1,w) = (1/nu)*(((segment_num*pi^4*R^3)/((segment_num-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(segment_num/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
                 m=m+1;
-                j=j+1;
             end
         end
     end
     
     COT_segment(COT_segment == 0) = NaN;
     
+    %Number of moving pairs, number of bridged segments, number of waves
     [num_rows,num_cols,num_layers] = size(COT_segment);
     
+    for i = 1:num_layers
+        m_w0(:,i) = COT_segment(:,1,i); %0 bridge segments
+    end
+    
+    m_w0 = log(m_w0);
+        
+    figure
+    imagesc(m_w0);
+    colormap([1 1 1; parula(256)])
+    caxis([10 15])
+    colorbar
+%%    
+ %{   
     figure
     [X,Y] = meshgrid(1:num_cols,1:num_rows);
     for i = 1:num_layers
@@ -99,7 +110,18 @@ clc
         zlabel('COT');
         hold on
     end
-        
+    
+    figure
+    for j = 1:12
+        subplot(6,2,j)
+        surf(X,Y,COT_segment(:,:,j));
+        colormap(jet)
+        shading interp
+        xlabel('Number of bridged segments');
+        ylabel('Number of moving pairs');
+        zlabel('COT');
+    end
+%}        
     %%
     
     figure
