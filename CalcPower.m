@@ -3,7 +3,7 @@ close all
 clc
 
     R = 23/2; %Radius of segment
-    t = 0.3175; %Thickness of segment
+    t = 0.375; %Thickness of segment
     L = 20; %Length of segment
     nu = 1.3; %Poisson ratio
     %i = 0; 
@@ -27,10 +27,13 @@ clc
                 %only integer values due to which this optimization was created
                 while ((n-w*(2*m+b)>0) && (4*m+2*b-(n))<=0)
                     %Calculating COT based on Math_ver9.
-                    COT = (1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+                    COT = (1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b)));
                     %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b))); ->Simply supported bending
                     %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
+                    
                     %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending
+                    %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending using curved beam theory
+                    %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
                     
                     %If a minimum COT is measured note the w,m,b parameters for that segment number
                     if(COT<min_COT)
@@ -66,16 +69,19 @@ clc
     
     %%
     %Store all w,m,b values for a particular number of segments for both compression and bending factor
-    segment_num = 100;
+    segment_num = 6;
     
     for w = 1:floor(segment_num/2)
         for b = 0:floor(segment_num/2)
             m = 1;
             while ((segment_num-w*(2*m+b)>0) && (4*m+2*b-(segment_num))<=0)
-                COT_segment(m,b+1,w) = (1/nu)*(((segment_num*pi^4*R^3)/((segment_num-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(segment_num/(w*m*(m+b)));
+                COT_segment(m,b+1,w) = (1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+                
+                %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending using curved beam theory
+                %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
                 m=m+1;
             end
         end
@@ -95,7 +101,7 @@ clc
     figure
     imagesc(m_w0);
     colormap([1 1 1; parula(256)])
-    caxis([10 15])
+    caxis([floor(min(min(m_w0))) ceil(max(max(m_w0)))])
     colorbar
 %%    
  %{   
