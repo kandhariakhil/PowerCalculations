@@ -1,3 +1,6 @@
+%%In this version we select individual segments as moving segments the number is not 2m but just m
+%%which does not pertain to a pair moving at the same time, this was not accounted for in the first
+%%version.
 clear all
 close all
 clc
@@ -25,9 +28,9 @@ clc
                 
                 %fmincon was used at first but would not meet all constraints and would not give
                 %only integer values due to which this optimization was created
-                while ((n-w*(2*m+b)>0) && (4*m+2*b-(n))<=0)
+                while ((n-w*(m+b)>0) && (2*m+2*b-(n))<=0)
                     %Calculating COT based on Math_ver9.
-                    COT = (1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+                    COT = (1/nu)*(((n*pi*R^3)/((n-w*(m+b))*2*L*t^2))+(((m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
                     %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b))); ->Simply supported bending
                     %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
                     
@@ -57,14 +60,14 @@ clc
     
     %Calculate percentage of anchoring segments
     for i = min_segments:max_segments
-        ratio(i) = (2*mopt(i)+bopt(i))/(i-wopt(i)*(2*mopt(i)+bopt(i)));
-        perc_anchoring(i) = ((i-wopt(i)*(2*mopt(i)+bopt(i)))/i)*100;
+        ratio(i) = (wopt(i)*(mopt(i)+bopt(i)))/(i-wopt(i)*(mopt(i)+bopt(i)));
+        perc_anchoring(i) = ((i-wopt(i)*(mopt(i)+bopt(i)))/i)*100;
     end
     
     %calculate bending and compression power factors
     for i = min_segments:max_segments
         bending_power_factor(i) = (i*(2*mopt(i)+bopt(i))^4*(L/R)^3)/(8*wopt(i)*mopt(i)*(mopt(i)+bopt(i)));
-        compression_power_factor(i) = (pi*i^2*R^3)/(2*wopt(i)*mopt(i)*(mopt(i)+bopt(i))*(i-(wopt(i)*(2*mopt(i)+bopt(i))))*(L*t^2));
+        compression_power_factor(i) = (pi*i^2*R^3)/(2*wopt(i)*mopt(i)*(mopt(i)+bopt(i))*(i-(wopt(i)*(mopt(i)+bopt(i))))*(L*t^2));
         max_velocity(i) = wopt(i)*mopt(i)*(mopt(i)+bopt(i));
     end
     
@@ -75,8 +78,8 @@ clc
     for w = 1:floor(segment_num/2)
         for b = 0:floor(segment_num/2)
             m = 1;
-            while ((segment_num-w*(2*m+b)>0) && (4*m+2*b-(segment_num))<=0)
-                COT_segment(m,b+1,w) = (1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+            while ((segment_num-w*(m+b)>0) && (2*m+2*b-(segment_num))<=0)
+                COT_segment(m,b+1,w) = (1/nu)*(((n*pi*R^3)/((n-w*(m+b))*2*L*t^2))+(((m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b)));
                 %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
