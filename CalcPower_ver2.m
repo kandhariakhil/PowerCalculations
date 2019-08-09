@@ -5,9 +5,9 @@ clear all
 close all
 clc
 
-    R = 23/2; %Radius of segment
-    t = 0.375; %Thickness of segment
-    L = 20; %Length of segment
+    R = (23/2)/100; %Radius of segment in m
+    t = 0.375/100; %Thickness of segment in m
+    L = 20/100; %Length of segment in m
     nu = 1.3; %Poisson ratio
     %i = 0; 
     j = 0; %Used for iterating through pairs of moving segments
@@ -66,8 +66,8 @@ clc
     
     %calculate bending and compression power factors
     for i = min_segments:max_segments
-        bending_power_factor(i) = (i*(2*mopt(i)+bopt(i))^4*(L/R)^3)/(8*wopt(i)*mopt(i)*(mopt(i)+bopt(i)));
-        compression_power_factor(i) = (pi*i^2*R^3)/(2*wopt(i)*mopt(i)*(mopt(i)+bopt(i))*(i-(wopt(i)*(mopt(i)+bopt(i))))*(L*t^2));
+        bending_power_factor(i) = (1/nu)*(i*(mopt(i)+bopt(i))^4*(L/R)^3)/(8*wopt(i)*mopt(i)*(mopt(i)+bopt(i)));
+        compression_power_factor(i) = (1/nu)*(pi*i^2*R^3)/(2*wopt(i)*mopt(i)*(mopt(i)+bopt(i))*(i-(wopt(i)*(mopt(i)+bopt(i))))*(L*t^2));
         max_velocity(i) = wopt(i)*mopt(i)*(mopt(i)+bopt(i));
     end
     
