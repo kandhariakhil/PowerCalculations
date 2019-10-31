@@ -6,9 +6,9 @@ close all
 clc
 
     R = (23/2)/100; %Radius of segment in m
-    t = 0.375/100; %Thickness of segment in m
+    t = 0.3175/100; %Thickness of segment in m
     L = 20/100; %Length of segment in m
-    nu = 1.3; %Poisson ratio 
+    nu = 1.4; %Poisson ratio 
     j = 0; %Used for iterating through pairs of moving segments
     w = 1; %Number of waves
     
@@ -59,6 +59,52 @@ clc
         end
     end
     
+        for n = min_segments:max_segments
+            max_vel = 0; %Selecting a minimum COT for each iteration
+            for w = 1:floor(n/2) %Maximum number of waves possible is n/2 waves
+                for b = 0:floor(n/2) %Maximum number of bridged segments possible is half the number of segments
+                    m = 1;
+                    %While loop to iterate thorough all possible combinations in integers given
+                    %constraints are met with, while loop includes the 2 possible constraints set up for
+                    %this equation
+
+                    %fmincon was used at first but would not meet all constraints and would not give
+                    %only integer values due to which this optimization was created
+                    while ((n-w*(m+b)>0) && (2*m+2*b-(n))<=0)
+                        %Calculating COT based on Math_ver9.
+                        opt_vel = w*m*(m+b)/n;
+                        %COT = (1/nu)*(((n*pi*R^3)/((n-w*(m+b))*2*L*t^2))+(((m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+                        %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b))); ->Simply supported bending
+                        %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
+
+                        %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending
+                        %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending using curved beam theory
+                        %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
+
+                        %If a minimum COT is measured note the w,m,b parameters for that segment number
+                        if(opt_vel>max_vel)
+                            max_vel = opt_vel;
+                            vel_wopt(n) = w;
+                            if mod(m,2)~= 0
+                                vel_mopt(n) = m-1;
+                                vel_bopt(n) = 1;
+                            else
+                                vel_mopt(n) = m;
+                                vel_bopt(n) = b;
+                            end
+                            vel_opt(n) = vel_wopt(n)*vel_mopt(n)*(vel_mopt(n)+vel_bopt(n))/n
+                        end
+                        m=m+1;
+                    end
+                end
+            end
+        end
+    
+    for i = min_segments:max_segments
+        vel_ratio(i) = (vel_wopt(i)*(vel_mopt(i)+vel_bopt(i)))/(i-(vel_wopt(i)*(vel_mopt(i)+vel_bopt(i))));
+    end    
+        
+    
     %Record all COT
     [w_max,m_max,b_max] = size(COT);
     
@@ -91,20 +137,29 @@ clc
     segment_num = 100;
     
     for w = 1:floor(segment_num/2)
-        %for b = 0:floor(segment_num/2)
-            m = 1;
-            while ((segment_num-w*(m+b)>0) && (2*m+2*b-(segment_num))<=0)
-                COT_segment(m,1,w) = (1/nu)*(((segment_num*pi*R^3)/((segment_num-w*(m+b))*2*L*t^2))+(((m+b)^4*(L/R)^3)/8))*(segment_num/(w*(m/2)*((m/2)+b)));
-                speed_100seg(m,1,w) = (w*(m/2)*((m/2)+b))/segment_num;
-                %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b)));
-                %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b)));
-                %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
-                
-                %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending using curved beam theory
-                %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor
-                m=m+1;
-            end
-        %end
+        m = 1;
+        b = 0;
+        move = 1;
+        while ((segment_num-w*(m+b)>0) && (2*m+2*b-(segment_num))<=0)
+            
+            COT_segment(move,1,w) = (1/nu)*(((segment_num*pi*R^3)/((segment_num-w*(m+b))*2*L*t^2))+(((m+b)^4*(L/R)^3)/8))*(segment_num/(w*(m/2)*((m/2)+b)));
+            speed_100seg(move,1,w) = (w*(m/2)*((m/2)+b))/segment_num;
+            %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/(384/5)))*(n/(w*m*(m+b)));
+            %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2)))*(n/(w*m*(m+b)));
+            %(1/nu)*(((n*pi^4*R^3)/((n-w*(2*m+b))*4*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));
+
+            %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2))+(((2*m+b)^4*(L/R)^3)/8))*(n/(w*m*(m+b)));->Cantilevered bending using curved beam theory
+            %(1/nu)*(((n*pi*R^3)/((n-w*(2*m+b))*2*L*t^2)))*(n/(w*m*(m+b))); -> Only comrepssion factor            
+            move = move+1;
+            
+            if mod(move,2) == 0
+                m = move;
+                b = 0;
+            else
+                m = move-1;
+                b = 1;
+            end            
+        end
     end
     
     COT_segment(1,:,:) = NaN;
@@ -169,6 +224,30 @@ clc
     plot(min_segments:max_segments,ratio(min_segments:max_segments));
     xlabel('Number of segments');
     ylabel('Percentage of anchoring segments');
+    
+    figure
+    plot(min_segments:max_segments,vel_opt(min_segments:max_segments));
+    xlabel('Number of segments');
+    ylabel('Optimal velocity');
+    
+    figure
+    plot(min_segments:max_segments,vel_ratio(min_segments:max_segments));
+    xlabel('Number of segments');
+    ylabel('Percentage of anchoring segments for optimal velocity');
+    
+    figure
+    subplot(3,1,1)
+    plot(min_segments:max_segments,vel_wopt(min_segments:max_segments));
+    xlabel('Number of segments');
+    ylabel('Optimized number of waves for velocity');
+    subplot(3,1,2)
+    plot(min_segments:max_segments,vel_mopt(min_segments:max_segments)+vel_bopt(min_segments:max_segments));
+    xlabel('Number of segments');
+    ylabel('Optimized number of moving pairs for velocity');    
+    subplot(3,1,3)
+    plot(min_segments:max_segments,bopt(min_segments:max_segments));
+    xlabel('Number of segments');
+    ylabel('Optimized number of bridged segments');    
     
     figure
     subplot(3,1,1)
